@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.html",
   "dependencies": {
+    "jquery": "^3.2.1",
     "three": "^0.87.1"
   },
   "devDependencies": {},
