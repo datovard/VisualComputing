@@ -1,5 +1,5 @@
 /*********************************
-* Face-Vertex Mesh representation
+* Vertex-Vertex Mesh representation
 * Made by Dorian Tovar
 * As seen in "Explicit Vertex representation (Vertex-Vertex Meshes)" on:
 * http://glasnost.itcarlow.ie/~powerk/GeneralGraphicsNotes/meshes/polygon_meshes.html
