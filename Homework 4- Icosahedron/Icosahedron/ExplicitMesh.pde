@@ -16,7 +16,7 @@ class ExplicitMesh {
   // Map of every Vertex in the figure
   private ArrayList< ArrayList<PVector> > polygons;
   
-  PShape retainedModel;
+  PShape retainedModel, retainedModel1, retainedModel2, retainedModel3;
   
   ExplicitMesh(){
     phi = 1.61803398874;
@@ -185,8 +185,39 @@ class ExplicitMesh {
     retainedModel.strokeWeight(3);
     for( ArrayList<PVector> vertexList : polygons )
       for( PVector vertex: vertexList )
-      retainedModel.vertex( vertex.x, vertex.y, vertex.z );
+        retainedModel.vertex( vertex.x, vertex.y, vertex.z );
     retainedModel.endShape();
+    
+    retainedModel1 = createShape();
+    retainedModel1.beginShape(TRIANGLES);
+    retainedModel1.noFill();
+    retainedModel1.stroke(255);
+    retainedModel1.strokeWeight(3);
+    for( ArrayList<PVector> vertexList : polygons )
+      for( PVector vertex: vertexList )
+        retainedModel1.vertex( vertex.x, vertex.y, vertex.z );
+    retainedModel1.endShape();
+    
+    retainedModel2 = createShape();
+    retainedModel2.beginShape(TRIANGLES);
+    retainedModel2.strokeWeight(3);
+    retainedModel2.fill(0, 0, 255);
+    retainedModel2.noStroke();
+    for( ArrayList<PVector> vertexList : polygons )
+      for( PVector vertex: vertexList )
+        retainedModel2.vertex( vertex.x, vertex.y, vertex.z );
+    retainedModel2.endShape();
+    
+    
+    retainedModel3 = createShape();
+    retainedModel3.beginShape(TRIANGLES);
+    retainedModel3.fill(0, 0, 255);
+    retainedModel3.stroke(255);
+    retainedModel3.strokeWeight(3);
+    for( ArrayList<PVector> vertexList : polygons )
+      for( PVector vertex: vertexList )
+        retainedModel3.vertex( vertex.x, vertex.y, vertex.z );
+    retainedModel3.endShape();
   }
   
   int getSize(){
@@ -197,14 +228,53 @@ class ExplicitMesh {
     return polygons.get(index);
   }
   
-  void draw( boolean retained ){
+  void draw( boolean retained, int visualize ){
+    int shapeMode;
     if( retained ) {
-      shape(retainedModel);
+      switch(visualize){
+        case 0:
+          shape(retainedModel);
+          break;
+        case 1:
+          shape(retainedModel1);
+          break;
+        case 2:
+          shape(retainedModel2);
+          break;
+        case 3:
+          shape(retainedModel3);
+          break;
+      }
+      
     }else{
-      noFill();
-      stroke(255, 0, 0);
-      strokeWeight(3);
-      beginShape(POINTS);
+      shapeMode = POINTS;
+      switch(visualize){
+        case 0:
+          noFill();
+          stroke(255, 0, 0);
+          strokeWeight(3);
+          shapeMode = POINTS;
+          break;
+        case 1:
+          noFill();
+          stroke(255);
+          strokeWeight(3);
+          shapeMode = TRIANGLES;
+          break;
+        case 2:
+          fill(255, 0, 0);
+          noStroke();
+          shapeMode = TRIANGLES;
+          break;
+        case 3:
+          fill(255, 0, 0);
+          stroke(255);
+          strokeWeight(3);
+          shapeMode = TRIANGLES;
+          break;
+      }
+      
+      beginShape(shapeMode);
       for( ArrayList<PVector> vertexList : polygons )
         for( PVector vertex: vertexList )
           vertex( vertex.x, vertex.y, vertex.z );

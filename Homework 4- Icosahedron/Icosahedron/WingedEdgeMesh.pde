@@ -21,7 +21,7 @@ class WingedEdgeMesh {
   //Edges HashMap
   private HashMap<String, Edge> edgeMap;
   
-  PShape retainedModel;
+  PShape retainedModel, retainedModel1, retainedModel2, retainedModel3;
   
   WingedEdgeMesh(){
     phi = 1.61803398874;
@@ -302,15 +302,15 @@ class WingedEdgeMesh {
     edgeMap.put( "e29", new Edge( arrAuxVertices[28], arrAuxFaces2[28], arrAuxEdges[28] ) );
     edgeMap.put( "e30", new Edge( arrAuxVertices[29], arrAuxFaces2[29], arrAuxEdges[29] ) );
     
-    
-    retainedModel = createShape();
-    retainedModel.beginShape(TRIANGLE);
-    retainedModel.noFill();
-    retainedModel.stroke(0, 0, 255);
-    retainedModel.strokeWeight(3);
     Face face;
     Edge edge1, edge2, edge3;
     Vertex vertex;
+    
+    retainedModel = createShape();
+    retainedModel.beginShape(POINTS);
+    retainedModel.noFill();
+    retainedModel.stroke(0, 0, 255);
+    retainedModel.strokeWeight(3);
     for (HashMap.Entry<String, Face> entry : faceMap.entrySet()) {
       face = entry.getValue();
       edge1 = edgeMap.get( face.edges[0] ); edge2 = edgeMap.get( face.edges[1] ); edge3 = edgeMap.get( face.edges[2] );
@@ -333,21 +333,146 @@ class WingedEdgeMesh {
       vertex = vertexList.get(edge3.vertices[1]);
       retainedModel.vertex( vertex.x, vertex.y, vertex.z );
     }
-    
     retainedModel.endShape();
+    
+    retainedModel1 = createShape();
+    retainedModel1.beginShape(TRIANGLES);
+    retainedModel1.noFill();
+    retainedModel1.stroke(255);
+    retainedModel1.strokeWeight(3);
+    for (HashMap.Entry<String, Face> entry : faceMap.entrySet()) {
+      face = entry.getValue();
+      edge1 = edgeMap.get( face.edges[0] ); edge2 = edgeMap.get( face.edges[1] ); edge3 = edgeMap.get( face.edges[2] );
+      
+      vertex = vertexList.get(edge1.vertices[0]);
+      retainedModel1.vertex( vertex.x, vertex.y, vertex.z );
+      
+      vertex = vertexList.get(edge1.vertices[1]);
+      retainedModel1.vertex( vertex.x, vertex.y, vertex.z );
+      
+      vertex = vertexList.get(edge2.vertices[0]);
+      retainedModel1.vertex( vertex.x, vertex.y, vertex.z );
+      
+      vertex = vertexList.get(edge2.vertices[1]);
+      retainedModel1.vertex( vertex.x, vertex.y, vertex.z );
+      
+      vertex = vertexList.get(edge3.vertices[0]);
+      retainedModel1.vertex( vertex.x, vertex.y, vertex.z );
+      
+      vertex = vertexList.get(edge3.vertices[1]);
+      retainedModel1.vertex( vertex.x, vertex.y, vertex.z );
+    }
+    retainedModel1.endShape();
+    
+    retainedModel2 = createShape();
+    retainedModel2.beginShape(TRIANGLES);
+    retainedModel2.strokeWeight(3);
+    retainedModel2.fill(0, 0, 255);
+    retainedModel2.noStroke();
+    for (HashMap.Entry<String, Face> entry : faceMap.entrySet()) {
+      face = entry.getValue();
+      edge1 = edgeMap.get( face.edges[0] ); edge2 = edgeMap.get( face.edges[1] ); edge3 = edgeMap.get( face.edges[2] );
+      
+      vertex = vertexList.get(edge1.vertices[0]);
+      retainedModel2.vertex( vertex.x, vertex.y, vertex.z );
+      
+      vertex = vertexList.get(edge1.vertices[1]);
+      retainedModel2.vertex( vertex.x, vertex.y, vertex.z );
+      
+      vertex = vertexList.get(edge2.vertices[0]);
+      retainedModel2.vertex( vertex.x, vertex.y, vertex.z );
+      
+      vertex = vertexList.get(edge2.vertices[1]);
+      retainedModel2.vertex( vertex.x, vertex.y, vertex.z );
+      
+      vertex = vertexList.get(edge3.vertices[0]);
+      retainedModel2.vertex( vertex.x, vertex.y, vertex.z );
+      
+      vertex = vertexList.get(edge3.vertices[1]);
+      retainedModel2.vertex( vertex.x, vertex.y, vertex.z );
+    }
+    retainedModel2.endShape();
+    
+    retainedModel3 = createShape();
+    retainedModel3.beginShape(TRIANGLES);
+    retainedModel3.fill(0, 0, 255);
+    retainedModel3.stroke(255);
+    retainedModel3.strokeWeight(3);
+    for (HashMap.Entry<String, Face> entry : faceMap.entrySet()) {
+      face = entry.getValue();
+      edge1 = edgeMap.get( face.edges[0] ); edge2 = edgeMap.get( face.edges[1] ); edge3 = edgeMap.get( face.edges[2] );
+      
+      vertex = vertexList.get(edge1.vertices[0]);
+      retainedModel3.vertex( vertex.x, vertex.y, vertex.z );
+      
+      vertex = vertexList.get(edge1.vertices[1]);
+      retainedModel3.vertex( vertex.x, vertex.y, vertex.z );
+      
+      vertex = vertexList.get(edge2.vertices[0]);
+      retainedModel3.vertex( vertex.x, vertex.y, vertex.z );
+      
+      vertex = vertexList.get(edge2.vertices[1]);
+      retainedModel3.vertex( vertex.x, vertex.y, vertex.z );
+      
+      vertex = vertexList.get(edge3.vertices[0]);
+      retainedModel3.vertex( vertex.x, vertex.y, vertex.z );
+      
+      vertex = vertexList.get(edge3.vertices[1]);
+      retainedModel3.vertex( vertex.x, vertex.y, vertex.z );
+    }
+    retainedModel3.endShape();
   }
   
-  void draw( boolean retained ){
+  void draw( boolean retained, int visualize ){
+    int shapeMode;
     if( retained ){
-      shape(retainedModel);
+      switch(visualize){
+        case 0:
+          shape(retainedModel);
+          break;
+        case 1:
+          shape(retainedModel1);
+          break;
+        case 2:
+          shape(retainedModel2);
+          break;
+        case 3:
+          shape(retainedModel3);
+          break;
+      }
     }else{
+      shapeMode = POINTS;
+      switch(visualize){
+        case 0:
+          noFill();
+          stroke(255, 0, 0);
+          strokeWeight(3);
+          shapeMode = POINTS;
+          break;
+        case 1:
+          noFill();
+          stroke(255);
+          strokeWeight(3);
+          shapeMode = TRIANGLES;
+          break;
+        case 2:
+          fill(255, 0, 0);
+          noStroke();
+          shapeMode = TRIANGLES;
+          break;
+        case 3:
+          fill(255, 0, 0);
+          stroke(255);
+          strokeWeight(3);
+          shapeMode = TRIANGLES;
+          break;
+      }
+      
       Face face;
       Edge edge1, edge2, edge3;
       Vertex vertex;
-      noFill();
-      stroke(255, 0, 0);
-      strokeWeight(3);
-      beginShape(TRIANGLE);
+      
+      beginShape(shapeMode);
       for (HashMap.Entry<String, Face> entry : faceMap.entrySet()) {
         face = entry.getValue();
         edge1 = edgeMap.get( face.edges[0] ); edge2 = edgeMap.get( face.edges[1] ); edge3 = edgeMap.get( face.edges[2] );

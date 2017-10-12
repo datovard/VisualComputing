@@ -19,7 +19,7 @@ class FaceVertexMesh {
   //Face-Vertex Indexes List
   private ArrayList<Integer> vvList;
   
-  PShape retainedModel;
+  PShape retainedModel, retainedModel1, retainedModel2, retainedModel3;
   
   FaceVertexMesh(){
     phi = 1.61803398874;
@@ -144,13 +144,40 @@ class FaceVertexMesh {
     vvList.add( 9 );
     
     retainedModel = createShape();
-    retainedModel.beginShape(TRIANGLE);
-    retainedModel.fill(0, 0, 255);
-    retainedModel.stroke(255);
+    retainedModel.beginShape(POINTS);
+    retainedModel.noFill();
+    retainedModel.stroke(0, 0, 255);
     retainedModel.strokeWeight(3);
     for( Integer i : vvList )
       retainedModel.vertex( vertices.get(i).x, vertices.get(i).y, vertices.get(i).z );
     retainedModel.endShape();
+    
+    retainedModel1 = createShape();
+    retainedModel1.beginShape(TRIANGLES);
+    retainedModel1.noFill();
+    retainedModel1.stroke(255);
+    retainedModel1.strokeWeight(3);
+    for( Integer i : vvList )
+      retainedModel1.vertex( vertices.get(i).x, vertices.get(i).y, vertices.get(i).z );
+    retainedModel1.endShape();
+    
+    retainedModel2 = createShape();
+    retainedModel2.beginShape(TRIANGLES);
+    retainedModel2.strokeWeight(3);
+    retainedModel2.fill(0, 0, 255);
+    retainedModel2.noStroke();
+    for( Integer i : vvList )
+      retainedModel2.vertex( vertices.get(i).x, vertices.get(i).y, vertices.get(i).z );
+    retainedModel2.endShape();
+    
+    retainedModel3 = createShape();
+    retainedModel3.beginShape(TRIANGLES);
+    retainedModel3.fill(0, 0, 255);
+    retainedModel3.stroke(255);
+    retainedModel3.strokeWeight(3);
+    for( Integer i : vvList )
+      retainedModel3.vertex( vertices.get(i).x, vertices.get(i).y, vertices.get(i).z );
+    retainedModel3.endShape();
   }
   
   int getSize(){
@@ -161,14 +188,52 @@ class FaceVertexMesh {
     return vertices.get(index);
   }
   
-  void draw( boolean retained ){
+  void draw( boolean retained, int visualize ){
+    int shapeMode;
     if( retained ) {
-      shape(retainedModel);
+      switch(visualize){
+        case 0:
+          shape(retainedModel);
+          break;
+        case 1:
+          shape(retainedModel1);
+          break;
+        case 2:
+          shape(retainedModel2);
+          break;
+        case 3:
+          shape(retainedModel3);
+          break;
+      }
     }else{
-      fill(255, 0, 0);
-      stroke(255);
-      strokeWeight(3);
-      beginShape(TRIANGLE);
+      shapeMode = POINTS;
+      switch(visualize){
+        case 0:
+          noFill();
+          stroke(255, 0, 0);
+          strokeWeight(3);
+          shapeMode = POINTS;
+          break;
+        case 1:
+          noFill();
+          stroke(255);
+          strokeWeight(3);
+          shapeMode = TRIANGLES;
+          break;
+        case 2:
+          fill(255, 0, 0);
+          noStroke();
+          shapeMode = TRIANGLES;
+          break;
+        case 3:
+          fill(255, 0, 0);
+          stroke(255);
+          strokeWeight(3);
+          shapeMode = TRIANGLES;
+          break;
+      }
+      
+      beginShape(shapeMode);
       for( Integer i : vvList )
         vertex( vertices.get(i).x, vertices.get(i).y, vertices.get(i).z );
       endShape();
