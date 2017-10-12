@@ -306,6 +306,8 @@ class WingedEdgeMesh {
     retainedModel = createShape();
     retainedModel.beginShape(TRIANGLE);
     retainedModel.noFill();
+    retainedModel.stroke(0, 0, 255);
+    retainedModel.strokeWeight(3);
     Face face;
     Edge edge1, edge2, edge3;
     Vertex vertex;
@@ -335,37 +337,42 @@ class WingedEdgeMesh {
     retainedModel.endShape();
   }
   
-  void draw(){
-    Face face;
-    Edge edge1, edge2, edge3;
-    Vertex vertex;
-    noFill();
-    beginShape(TRIANGLE);
-   
-    for (HashMap.Entry<String, Face> entry : faceMap.entrySet()) {
-      face = entry.getValue();
-      edge1 = edgeMap.get( face.edges[0] ); edge2 = edgeMap.get( face.edges[1] ); edge3 = edgeMap.get( face.edges[2] );
-      
-      vertex = vertexList.get(edge1.vertices[0]);
-      vertex( vertex.x, vertex.y, vertex.z );
-      
-      vertex = vertexList.get(edge1.vertices[1]);
-      vertex( vertex.x, vertex.y, vertex.z );
-      
-      vertex = vertexList.get(edge2.vertices[0]);
-      vertex( vertex.x, vertex.y, vertex.z );
-      
-      vertex = vertexList.get(edge2.vertices[1]);
-      vertex( vertex.x, vertex.y, vertex.z );
-      
-      vertex = vertexList.get(edge3.vertices[0]);
-      vertex( vertex.x, vertex.y, vertex.z );
-      
-      vertex = vertexList.get(edge3.vertices[1]);
-      vertex( vertex.x, vertex.y, vertex.z );
+  void draw( boolean retained ){
+    if( retained ){
+      shape(retainedModel);
+    }else{
+      Face face;
+      Edge edge1, edge2, edge3;
+      Vertex vertex;
+      noFill();
+      stroke(255, 0, 0);
+      strokeWeight(3);
+      beginShape(TRIANGLE);
+      for (HashMap.Entry<String, Face> entry : faceMap.entrySet()) {
+        face = entry.getValue();
+        edge1 = edgeMap.get( face.edges[0] ); edge2 = edgeMap.get( face.edges[1] ); edge3 = edgeMap.get( face.edges[2] );
+        
+        vertex = vertexList.get(edge1.vertices[0]);
+        vertex( vertex.x, vertex.y, vertex.z );
+        
+        vertex = vertexList.get(edge1.vertices[1]);
+        vertex( vertex.x, vertex.y, vertex.z );
+        
+        vertex = vertexList.get(edge2.vertices[0]);
+        vertex( vertex.x, vertex.y, vertex.z );
+        
+        vertex = vertexList.get(edge2.vertices[1]);
+        vertex( vertex.x, vertex.y, vertex.z );
+        
+        vertex = vertexList.get(edge3.vertices[0]);
+        vertex( vertex.x, vertex.y, vertex.z );
+        
+        vertex = vertexList.get(edge3.vertices[1]);
+        vertex( vertex.x, vertex.y, vertex.z );
+      }
+     
+      endShape();
     }
-   
-    endShape();
   }
 }
 

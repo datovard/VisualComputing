@@ -179,8 +179,10 @@ class ExplicitMesh {
     }} );
     
     retainedModel = createShape();
-    retainedModel.beginShape(TRIANGLE);
+    retainedModel.beginShape(POINTS);
     retainedModel.noFill();
+    retainedModel.stroke(0, 0, 255);
+    retainedModel.strokeWeight(3);
     for( ArrayList<PVector> vertexList : polygons )
       for( PVector vertex: vertexList )
       retainedModel.vertex( vertex.x, vertex.y, vertex.z );
@@ -195,13 +197,18 @@ class ExplicitMesh {
     return polygons.get(index);
   }
   
-  void draw(){
-    noStroke();
-    fill(255, 0, 0, 200);
-    beginShape(TRIANGLE);
-    for( ArrayList<PVector> vertexList : polygons )
-      for( PVector vertex: vertexList )
-      vertex( vertex.x, vertex.y, vertex.z );
-    endShape();
+  void draw( boolean retained ){
+    if( retained ) {
+      shape(retainedModel);
+    }else{
+      noFill();
+      stroke(255, 0, 0);
+      strokeWeight(3);
+      beginShape(POINTS);
+      for( ArrayList<PVector> vertexList : polygons )
+        for( PVector vertex: vertexList )
+          vertex( vertex.x, vertex.y, vertex.z );
+      endShape();
+    }
   }
 }

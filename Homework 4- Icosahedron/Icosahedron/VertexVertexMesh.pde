@@ -139,7 +139,8 @@ class VertexVertexMesh {
     
     retainedModel = createShape();
     retainedModel.beginShape(TRIANGLE);
-    retainedModel.noFill();
+    retainedModel.fill(0, 0, 255);
+    retainedModel.noStroke();    
     for( PVector v : vvList )
       retainedModel.vertex( v.x, v.y, v.z );
     retainedModel.endShape();
@@ -153,12 +154,17 @@ class VertexVertexMesh {
     return vvList.get(index);
   }
   
-  void draw(){
-    noFill();
-    beginShape(TRIANGLE);
-    for( PVector v : vvList )
-      vertex( v.x, v.y, v.z );
-    endShape();
+  void draw( boolean retained ){
+    if( retained ) {
+      shape(retainedModel);
+    }else{
+      fill(255, 0, 0);
+      noStroke();
+      beginShape(TRIANGLE);
+      for( PVector v : vvList )
+        vertex( v.x, v.y, v.z );
+      endShape();
+    }
   }
 }
 

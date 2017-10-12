@@ -145,7 +145,9 @@ class FaceVertexMesh {
     
     retainedModel = createShape();
     retainedModel.beginShape(TRIANGLE);
-    retainedModel.noFill();
+    retainedModel.fill(0, 0, 255);
+    retainedModel.stroke(255);
+    retainedModel.strokeWeight(3);
     for( Integer i : vvList )
       retainedModel.vertex( vertices.get(i).x, vertices.get(i).y, vertices.get(i).z );
     retainedModel.endShape();
@@ -159,11 +161,17 @@ class FaceVertexMesh {
     return vertices.get(index);
   }
   
-  void draw(){
-    fill(255, 0, 0, 200);
-    beginShape(TRIANGLE);
-    for( Integer i : vvList )
-      vertex( vertices.get(i).x, vertices.get(i).y, vertices.get(i).z );
-    endShape();
+  void draw( boolean retained ){
+    if( retained ) {
+      shape(retainedModel);
+    }else{
+      fill(255, 0, 0);
+      stroke(255);
+      strokeWeight(3);
+      beginShape(TRIANGLE);
+      for( Integer i : vvList )
+        vertex( vertices.get(i).x, vertices.get(i).y, vertices.get(i).z );
+      endShape();
+    }
   }
 }
