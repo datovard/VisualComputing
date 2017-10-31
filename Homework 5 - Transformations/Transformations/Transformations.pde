@@ -6,7 +6,7 @@
 **************************************/
 
 // Global Variables
-int mode = 2;
+int mode = 0;
 boolean applyMatrix = true;
 
 // Global translate point
