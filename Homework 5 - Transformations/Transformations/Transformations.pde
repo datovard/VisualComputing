@@ -52,7 +52,7 @@ void draw() {
       rotatingFigure( 1.0, 1.0, 1.0, 30.0 );
       break;
     case 3:
-      shearingFigure( 1.0, 1.0 );
+      shearingFigure( 1.5, 0.7 );
       break;
   }
 }
