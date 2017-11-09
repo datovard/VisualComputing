@@ -49,7 +49,7 @@ void draw() {
       scalingFigure( 3.0, 3.0, 3.0 );
       break;
     case 2:
-      rotatingFigure( 1.0, 1.0, 1.0, 30.0 );
+      rotatingFigure( -2.0, 1.0, 3.0, 30.0 );
       break;
     case 3:
       shearingFigure( 1.5, 0.7 );
