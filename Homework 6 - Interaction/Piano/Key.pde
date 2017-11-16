@@ -18,7 +18,12 @@ abstract class Key {
   
   abstract void draw();
   
-  abstract void sound();
+  void sound(){
+    if( !this.press ){
+      this.pressKey();
+      out.playNote( this.frequency );
+    }
+  }
   
   void pressKey(){
     this.press = true;

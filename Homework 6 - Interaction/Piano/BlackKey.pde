@@ -68,6 +68,7 @@ class BlackKey extends Key {
     this.pressed.vertex((this.width/2), -(this.height/2), -(this.depth/2));
     this.pressed.vertex((this.width/2), (this.height/2), -(this.depth/2) );
     this.pressed.vertex((this.width/2), (this.height/2), (this.depth/2));
+    this.pressed.rotateX(-PI/18);
     this.pressed.endShape();
   }
   
@@ -90,17 +91,5 @@ class BlackKey extends Key {
     text( note1, -5, -4, 11 );
     text( note2, -5, 7, 11 );
     popMatrix();
-  }
-  
-  void sound(){
-    this.pressKey();
-    if ( wave != null && out != null )
-      wave.unpatch(out);
-    
-    // create a sine wave Oscil, set to 440 Hz, at 0.5 amplitude
-    wave = new Oscil( this.frequency, (float)Math.log10( this.frequency ), Waves.SINE );
-    
-    // patch the Oscil to the output
-    wave.patch( out );
   }
 }

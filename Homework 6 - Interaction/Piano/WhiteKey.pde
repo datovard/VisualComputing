@@ -1,6 +1,7 @@
 class WhiteKey extends Key {
   String note; 
   PShape unpressed, pressed;
+  InteractiveFrame iframe;
   
   WhiteKey( float x, float y, float z, String note, float freq ) {
     super( 20, 50, 10, x, y, z, freq );
@@ -68,6 +69,13 @@ class WhiteKey extends Key {
     this.pressed.vertex((this.width/2), (this.height/2), (this.depth/2));
     this.pressed.rotateX(-PI/18);
     this.pressed.endShape();
+    
+    this.iframe = new InteractiveFrame(scene, "draw");
+    this.iframe.setClickBinding(LEFT, 1, "keyClick");
+  }
+  
+  void keyClick(){
+    System.out.println(this.frequency);
   }
   
   void draw (){
@@ -84,17 +92,5 @@ class WhiteKey extends Key {
     translate( this.x, this.y, this.z );
     text( note, -8, 15, 6 );
     popMatrix();
-  }
-  
-  void sound(){
-    this.pressKey();
-    if ( wave != null && out != null )
-      wave.unpatch(out);
-    
-    // create a sine wave Oscil, set to 440 Hz, at 0.5 amplitude
-    wave = new Oscil( this.frequency, (float)Math.log10(this.frequency), Waves.SINE );
-    
-    // patch the Oscil to the output
-    wave.patch( out );
   }
 }
