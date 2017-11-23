@@ -11,7 +11,6 @@ THREE.OrbitControls = function ( object, domElement ) {
 	this.domElement = ( domElement !== undefined ) ? domElement : document;
 
 	// API
-
 	this.enabled = true;
 
 	this.center = new THREE.Vector3();
@@ -62,32 +61,19 @@ THREE.OrbitControls = function ( object, domElement ) {
 	var state = STATE.NONE;
 
 	// events
-
 	var changeEvent = { type: 'change' };
-
-
 	this.rotateLeft = function ( angle ) {
-
 		if ( angle === undefined ) {
-
 			angle = getAutoRotationAngle();
-
 		}
-
 		thetaDelta -= angle;
-
 	};
 
 	this.rotateRight = function ( angle ) {
-
 		if ( angle === undefined ) {
-
 			angle = getAutoRotationAngle();
-
 		}
-
 		thetaDelta += angle;
-
 	};
 
 	this.rotateUp = function ( angle ) {
@@ -232,8 +218,8 @@ THREE.OrbitControls = function ( object, domElement ) {
 			if ( event.button === 2 )
 				state = STATE.PAN;
 		}
-		
-		
+
+
 		if ( state === STATE.ROTATE ) {
 
 			//state = STATE.ROTATE;
@@ -263,8 +249,8 @@ THREE.OrbitControls = function ( object, domElement ) {
 
 		event.preventDefault();
 
-		
-		
+
+
 		if ( state === STATE.ROTATE ) {
 
 			rotateEnd.set( event.clientX, event.clientY );
@@ -373,11 +359,11 @@ THREE.OrbitControls = function ( object, domElement ) {
 			case scope.keys.PAN:
 				state = STATE.PAN;
 				break;
-				
+
 		}
 
 	}
-	
+
 	function onKeyUp( event ) {
 
 		switch ( event.keyCode ) {

@@ -3,15 +3,15 @@ var visualizer;
 $(document).ready(function () {
     visualizer = new SphereVisualizer();
     visualizer.initialize();
-    visualizer.createBars();
+    visualizer.createSpheres();
     visualizer.setupAudioProcessing();
-    /*visualizer.handleDrop();*/
+    visualizer.handleDrop();
 });
 
 
 function SphereVisualizer() {
     //constants
-    this.numberOfSpheres = 5;
+    this.numberOfSpheres = 10;
 
     //Rendering
     this.scene;
@@ -21,6 +21,7 @@ function SphereVisualizer() {
 
     //spheres
     this.spheres = new Array();
+    this.vertices = new Array();
 
     //audio
     this.javascriptNode;
@@ -31,7 +32,6 @@ function SphereVisualizer() {
 
 //initialize the visualizer elements
 SphereVisualizer.prototype.initialize = function () {
-
   this.scene = new THREE.Scene();
 
   //get the width and height
@@ -43,18 +43,17 @@ SphereVisualizer.prototype.initialize = function () {
   this.renderer.setSize(WIDTH, HEIGHT);
 
   //append the rederer to the body
-  document.body.appendChild(this.renderer.domElement);
+  document.body.appendChild( this.renderer.domElement );
 
   //create and add camera
   this.camera = new THREE.PerspectiveCamera(40, WIDTH / HEIGHT, 0.1, 20000);
-  this.camera.position.set(0, 0, 100);
-  this.scene.add(this.camera);
+  this.camera.position.set(0, 50, 100);
+  this.scene.add( this.camera );
 
   var that = this;
 
   //update renderer size, aspect ratio and projection matrix on resize
   window.addEventListener('resize', function () {
-
       var WIDTH = window.innerWidth,
           HEIGHT = window.innerHeight;
 
@@ -62,61 +61,54 @@ SphereVisualizer.prototype.initialize = function () {
 
       that.camera.aspect = WIDTH / HEIGHT;
       that.camera.updateProjectionMatrix();
-
   });
 
   //background color of the scene
-  this.renderer.setClearColor(0x333F47, 1);
+  this.renderer.setClearColor(0x000000, 1);
 
-  //create a light and add it to the scene
-  var light = new THREE.PointLight(0xffffff);
-  light.position.set(-100, 200, 100);
-  this.scene.add(light);
+  // Floor
+  var floorGeometry = new THREE.PlaneGeometry(1000, 1000, 20, 20);
+  var floorMaterial = new THREE.MeshPhongMaterial({
+    color: 0xecebec,
+    specular: 0x000000,
+    shininess: 100
+  });
+
+  var floor = new THREE.Mesh(floorGeometry, floorMaterial);
+  floor.rotation.x = -0.5 * Math.PI;
+  floor.receiveShadow = true;
+  this.scene.add(floor);
+
+  // Lights
+  // Ambient light for general illumination
+  var ambientLight = new THREE.AmbientLight(0x252525);
+  this.scene.add(ambientLight);
 
   //Add interation capability to the scene
   this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
 };
 
 //create the bars required to show the visualization
-SphereVisualizer.prototype.createBars = function () {
-  var x = -50, y = 0, z = 0;
+SphereVisualizer.prototype.createSpheres = function () {
+  var x = -50, y = 10, z = 0;
+
   for( var i = 0; i < this.numberOfSpheres; i++ ){
-    var geometry = new THREE.SphereGeometry(2, 100, 100, 0, Math.PI * 2, 0, Math.PI * 2);
+    var geometry = new THREE.SphereGeometry(2, 100, 100 );//, 0, Math.PI * 2, 0, Math.PI * 2);
     var material = new THREE.MeshNormalMaterial({ wireframe: true });
-    geometry.computeVertexNormals();
     this.spheres[i] = new THREE.Mesh( geometry, material );
 
-    console.log( this.spheres[i] );
-
     this.spheres[i].position.set( x, y, x );
-
     x += 10;
 
+    this.vertices[i] = JSON.parse(JSON.stringify( this.spheres[i].geometry.vertices ));
     this.scene.add( this.spheres[i] );
 
-    this.renderer.render( this.scene, this.camera );
+    //create a light and add it to the scene
+    // color, intensity, distance, angle, penumbra, decay
+    var light = new THREE.PointLight(0xffffff, 0.1, 23, 0.4, 1, 2);
+    light.position.set( 0, 20, 0);
+    this.scene.add(light);
   }
-
-  /*  //iterate and create bars
-    for (var i = 0; i < this.numberOfBars; i++) {
-
-        //create a bar
-        var barGeometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-
-        //create a material
-        var material = new THREE.MeshPhongMaterial({
-            color: this.getRandomColor(),
-            ambient: 0x808080,
-            specular: 0xffffff
-        });
-
-        //create the geometry and set the initial position
-        this.bars[i] = new THREE.Mesh(barGeometry, material);
-        this.bars[i].position.set(i - this.numberOfBars/2, 0, 0);
-
-        //add the created bar to the scene
-        this.scene.add(this.bars[i]);
-    }*/
 };
 
 SphereVisualizer.prototype.setupAudioProcessing = function () {
@@ -157,16 +149,22 @@ SphereVisualizer.prototype.setupAudioProcessing = function () {
         visualizer.renderer.render(visualizer.scene, visualizer.camera);
         visualizer.controls.update();
 
-        var step = Math.round(array.length / visualizer.numberOfBars);
+        var step = Math.round( array.length / visualizer.numberOfSpheres);
 
-        //Iterate through the bars and scale the z axis
-        /*for (var i = 0; i < visualizer.numberOfBars; i++) {
-            var value = array[i * step] / 4;
-            value = value < 1 ? 1 : value;
-            visualizer.bars[i].scale.z = value;
-        }*/
+        for( var i = 0; i < visualizer.numberOfSpheres; i++ ){
+          var freqRatio = Math.floor( 255/visualizer.numberOfSpheres );
+          var freqsPerSphere = array.slice( i * freqRatio, (i+1)*freqRatio );
+          var freqVertexRatio = Math.floor(9902 / freqRatio );
+
+          visualizer.spheres[i].geometry.dynamic = true;
+          for( var j = 0; j < 9901; j++ ){
+            visualizer.spheres[i].geometry.vertices[j].x = visualizer.vertices[i][j].x * (freqsPerSphere[ Math.floor(j/freqVertexRatio) ]/180 + 1);
+            visualizer.spheres[i].geometry.vertices[j].y = visualizer.vertices[i][j].y * (freqsPerSphere[ Math.floor(j/freqVertexRatio) ]/180 + 1);
+            visualizer.spheres[i].geometry.vertices[j].z = visualizer.vertices[i][j].z * (freqsPerSphere[ Math.floor(j/freqVertexRatio) ]/180 + 1);
+          }
+          visualizer.spheres[i].geometry.verticesNeedUpdate = true;
+        }
     }
-
 };
 
 //start the audio processing

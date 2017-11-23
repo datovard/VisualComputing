@@ -1,7 +1,6 @@
 class WhiteKey extends Key {
   String note; 
   PShape unpressed, pressed;
-  InteractiveFrame iframe;
   
   WhiteKey( float x, float y, float z, String note, float freq ) {
     super( 20, 50, 10, x, y, z, freq );
@@ -69,13 +68,6 @@ class WhiteKey extends Key {
     this.pressed.vertex((this.width/2), (this.height/2), (this.depth/2));
     this.pressed.rotateX(-PI/18);
     this.pressed.endShape();
-    
-    this.iframe = new InteractiveFrame(scene, "draw");
-    this.iframe.setClickBinding(LEFT, 1, "keyClick");
-  }
-  
-  void keyClick(){
-    System.out.println(this.frequency);
   }
   
   void draw (){

@@ -3,6 +3,7 @@ import remixlab.proscene.*;
 import remixlab.dandelion.geom.Rect;
 import remixlab.dandelion.core.GenericFrame;
 import remixlab.dandelion.geom.Vec;
+import remixlab.bias.event.*;
 import remixlab.bias.*;
 
 import ddf.minim.*;
