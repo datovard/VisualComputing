@@ -14,6 +14,7 @@ function SphereVisualizer() {
     this.numberOfSpheres = 8;
     this.radio = 30;
     this.sphereRadio = 3;
+    this.reaction = -100;        // min 0 - max 254
 
     //Rendering
     this.scene;
@@ -187,9 +188,9 @@ SphereVisualizer.prototype.setupAudioProcessing = function () {
 
           visualizer.spheres[i].geometry.dynamic = true;
           for( var j = 0; j < visualizer.vertices[i].length; j++ ){
-            visualizer.spheres[i].geometry.vertices[j].x = visualizer.vertices[i][j].x * (freqsPerSphere[ Math.floor(j/freqVertexRatio) ]/180 + 1);
-            visualizer.spheres[i].geometry.vertices[j].y = visualizer.vertices[i][j].y * (freqsPerSphere[ Math.floor(j/freqVertexRatio) ]/180 + 1);
-            visualizer.spheres[i].geometry.vertices[j].z = visualizer.vertices[i][j].z * (freqsPerSphere[ Math.floor(j/freqVertexRatio) ]/180 + 1);
+            visualizer.spheres[i].geometry.vertices[j].x = visualizer.vertices[i][j].x * (freqsPerSphere[ Math.floor(j/freqVertexRatio) ]/(255 - visualizer.reaction) + 1);
+            visualizer.spheres[i].geometry.vertices[j].y = visualizer.vertices[i][j].y * (freqsPerSphere[ Math.floor(j/freqVertexRatio) ]/(255 - visualizer.reaction) + 1);
+            visualizer.spheres[i].geometry.vertices[j].z = visualizer.vertices[i][j].z * (freqsPerSphere[ Math.floor(j/freqVertexRatio) ]/(255 - visualizer.reaction) + 1);
           }
           visualizer.spheres[i].geometry.verticesNeedUpdate = true;
           visualizer.spheres[i].material.color.setHex( visualizer.colors[visualizer.indexArray] );
