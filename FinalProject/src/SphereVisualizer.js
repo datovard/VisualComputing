@@ -11,7 +11,9 @@ $(document).ready(function () {
 
 function SphereVisualizer() {
     //constants
-    this.numberOfSpheres = 10;
+    this.numberOfSpheres = 8;
+    this.radio = 30;
+    this.sphereRadio = 3;
 
     //Rendering
     this.scene;
@@ -22,6 +24,11 @@ function SphereVisualizer() {
     //spheres
     this.spheres = new Array();
     this.vertices = new Array();
+
+    //colors
+    this.colors = new Array();
+    this.indexArray;
+    this.indexGlobal;
 
     //audio
     this.javascriptNode;
@@ -86,28 +93,44 @@ SphereVisualizer.prototype.initialize = function () {
 
   //Add interation capability to the scene
   this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+
+  this.colors[0] = 0xFE2E2E;
+  this.colors[1] = 0xFE642E;
+  this.colors[2] = 0xFE9A2E;
+  this.colors[3] = 0xFACC2E;
+  this.colors[4] = 0xF7FE2E;
+  this.colors[5] = 0xC8FE2E;
+  this.indexArray = 0;
+  this.indexGlobal = 0;
 };
 
 //create the bars required to show the visualization
 SphereVisualizer.prototype.createSpheres = function () {
-  var x = -50, y = 10, z = 0;
+  var y = 10;
 
   for( var i = 0; i < this.numberOfSpheres; i++ ){
-    var geometry = new THREE.SphereGeometry(2, 100, 100 );//, 0, Math.PI * 2, 0, Math.PI * 2);
-    var material = new THREE.MeshNormalMaterial({ wireframe: true });
-    this.spheres[i] = new THREE.Mesh( geometry, material );
+      var geometry = new THREE.SphereGeometry( this.sphereRadio, 100, 100 );
+      //var material = new THREE.MeshNormalMaterial({ wireframe: true });
+      var material = new THREE.MeshPhongMaterial({
+        // Required For Shadows
+        color: 0xecebec,
+        specular: 0x000000,
+        shininess: 100
+      });
 
-    this.spheres[i].position.set( x, y, x );
-    x += 10;
+      this.spheres[i] = new THREE.Mesh( geometry, material );
 
-    this.vertices[i] = JSON.parse(JSON.stringify( this.spheres[i].geometry.vertices ));
-    this.scene.add( this.spheres[i] );
+      this.spheres[i].position.set( Math.cos(2 * Math.PI/this.numberOfSpheres * i) * this.radio, y, Math.sin(2 * Math.PI/this.numberOfSpheres * i) * this.radio );
 
-    //create a light and add it to the scene
-    // color, intensity, distance, angle, penumbra, decay
-    var light = new THREE.PointLight(0xffffff, 0.1, 23, 0.4, 1, 2);
-    light.position.set( 0, 20, 0);
-    this.scene.add(light);
+      this.vertices[i] = JSON.parse(JSON.stringify( this.spheres[i].geometry.vertices ));
+      this.scene.add( this.spheres[i] );
+
+      //create a light and add it to the scene
+      // color, intensity, distance, angle, penumbra, decay
+      var light = new THREE.PointLight(0xffffff, 0.8, 25, 0.4, 1, 10);
+      //light.position.set( 0, 20, 0 );
+      light.position.set( Math.cos(2 * Math.PI/this.numberOfSpheres * i) * this.radio, y+10, Math.sin(2 * Math.PI/this.numberOfSpheres * i) * this.radio );
+      this.scene.add(light);
   }
 };
 
@@ -151,18 +174,25 @@ SphereVisualizer.prototype.setupAudioProcessing = function () {
 
         var step = Math.round( array.length / visualizer.numberOfSpheres);
 
+        visualizer.indexGlobal++;
+        if( visualizer.indexGlobal == 80 ){
+          visualizer.indexArray = (visualizer.indexArray + 1) % 6;
+          visualizer.indexGlobal = 0;
+        }
+
         for( var i = 0; i < visualizer.numberOfSpheres; i++ ){
           var freqRatio = Math.floor( 255/visualizer.numberOfSpheres );
           var freqsPerSphere = array.slice( i * freqRatio, (i+1)*freqRatio );
-          var freqVertexRatio = Math.floor(9902 / freqRatio );
+          var freqVertexRatio = Math.floor( visualizer.vertices[i].length / freqRatio );
 
           visualizer.spheres[i].geometry.dynamic = true;
-          for( var j = 0; j < 9901; j++ ){
+          for( var j = 0; j < visualizer.vertices[i].length; j++ ){
             visualizer.spheres[i].geometry.vertices[j].x = visualizer.vertices[i][j].x * (freqsPerSphere[ Math.floor(j/freqVertexRatio) ]/180 + 1);
             visualizer.spheres[i].geometry.vertices[j].y = visualizer.vertices[i][j].y * (freqsPerSphere[ Math.floor(j/freqVertexRatio) ]/180 + 1);
             visualizer.spheres[i].geometry.vertices[j].z = visualizer.vertices[i][j].z * (freqsPerSphere[ Math.floor(j/freqVertexRatio) ]/180 + 1);
           }
           visualizer.spheres[i].geometry.verticesNeedUpdate = true;
+          visualizer.spheres[i].material.color.setHex( visualizer.colors[visualizer.indexArray] );
         }
     }
 };
