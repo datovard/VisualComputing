@@ -27,9 +27,8 @@ function SphereVisualizer() {
     this.vertices = new Array();
 
     //colors
-    this.colors = new Array();
     this.indexArray;
-    this.indexGlobal;
+
 
     //audio
     this.javascriptNode;
@@ -95,14 +94,7 @@ SphereVisualizer.prototype.initialize = function () {
   //Add interation capability to the scene
   this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
 
-  this.colors[0] = 0xFE2E2E;
-  this.colors[1] = 0xFE642E;
-  this.colors[2] = 0xFE9A2E;
-  this.colors[3] = 0xFACC2E;
-  this.colors[4] = 0xF7FE2E;
-  this.colors[5] = 0xC8FE2E;
   this.indexArray = 0;
-  this.indexGlobal = 0;
 };
 
 //create the bars required to show the visualization
@@ -175,11 +167,7 @@ SphereVisualizer.prototype.setupAudioProcessing = function () {
 
         var step = Math.round( array.length / visualizer.numberOfSpheres);
 
-        visualizer.indexGlobal++;
-        if( visualizer.indexGlobal == 80 ){
-          visualizer.indexArray = (visualizer.indexArray + 1) % 6;
-          visualizer.indexGlobal = 0;
-        }
+        visualizer.indexArray = (visualizer.indexArray + 1) % 360;
 
         for( var i = 0; i < visualizer.numberOfSpheres; i++ ){
           var freqRatio = Math.floor( 255/visualizer.numberOfSpheres );
@@ -193,7 +181,7 @@ SphereVisualizer.prototype.setupAudioProcessing = function () {
             visualizer.spheres[i].geometry.vertices[j].z = visualizer.vertices[i][j].z * (freqsPerSphere[ Math.floor(j/freqVertexRatio) ]/(255 - visualizer.reaction) + 1);
           }
           visualizer.spheres[i].geometry.verticesNeedUpdate = true;
-          visualizer.spheres[i].material.color.setHex( visualizer.colors[visualizer.indexArray] );
+          visualizer.spheres[i].material.color.setHSL( visualizer.indexArray/360, 1, 0.5 );
         }
     }
 };
