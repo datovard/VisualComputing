@@ -1,257 +1,249 @@
-var visualizer;
+'use strict';
 
 $(document).ready(function () {
+    var visualizer;
     visualizer = new SphereVisualizer();
-    visualizer.initialize();
-    visualizer.createSpheres();
-    visualizer.setupAudioProcessing();
-    visualizer.handleDrop();
 });
 
+class SphereVisualizer {
+    constructor () {
+      //constants
+      this.numberOfSpheres = 8;
+      this.radio = 30;
+      this.sphereRadio = 3;
+      this.reaction = 100;        // min 0 - max 254
 
-function SphereVisualizer() {
-    //constants
-    this.numberOfSpheres = 8;
-    this.radio = 30;
-    this.sphereRadio = 3;
-    this.reaction = -100;        // min 0 - max 254
+      //Rendering
+      this.scene;
+      this.camera;
+      this.renderer;
+      this.controls;
 
-    //Rendering
-    this.scene;
-    this.camera;
-    this.renderer;
-    this.controls;
+      //spheres
+      this.spheres = new Array();
+      this.vertices = new Array();
 
-    //spheres
-    this.spheres = new Array();
-    this.vertices = new Array();
-
-    //colors
-    this.indexArray;
+      //colors
+      this.indexArray;
 
 
-    //audio
-    this.javascriptNode;
-    this.audioContext;
-    this.sourceBuffer;
-    this.analyser;
-};
+      //audio
+      this.javascriptNode;
+      this.audioContext;
+      this.sourceBuffer;
+      this.analyser;
 
-//initialize the visualizer elements
-SphereVisualizer.prototype.initialize = function () {
-  this.scene = new THREE.Scene();
+      this.initialize();
+      this.createSpheres();
+      this.setupAudioProcessing();
+      this.handleDrop();
+    }
 
-  //get the width and height
-  var WIDTH = window.innerWidth,
-      HEIGHT = window.innerHeight;
+    //initialize the visualizer elements
+    initialize () {
+      this.scene = new THREE.Scene();
 
-  //get the renderer
-  this.renderer = new THREE.WebGLRenderer({ antialias: true });
-  this.renderer.setSize(WIDTH, HEIGHT);
-
-  //append the rederer to the body
-  document.body.appendChild( this.renderer.domElement );
-
-  //create and add camera
-  this.camera = new THREE.PerspectiveCamera(40, WIDTH / HEIGHT, 0.1, 20000);
-  this.camera.position.set(0, 50, 100);
-  this.scene.add( this.camera );
-
-  var that = this;
-
-  //update renderer size, aspect ratio and projection matrix on resize
-  window.addEventListener('resize', function () {
+      //get the width and height
       var WIDTH = window.innerWidth,
           HEIGHT = window.innerHeight;
 
-      that.renderer.setSize(WIDTH, HEIGHT);
+      //get the renderer
+      this.renderer = new THREE.WebGLRenderer({ antialias: true });
+      this.renderer.setSize(WIDTH, HEIGHT);
 
-      that.camera.aspect = WIDTH / HEIGHT;
-      that.camera.updateProjectionMatrix();
-  });
+      //append the rederer to the body
+      document.body.appendChild( this.renderer.domElement );
 
-  //background color of the scene
-  this.renderer.setClearColor(0x000000, 1);
+      //create and add camera
+      this.camera = new THREE.PerspectiveCamera(40, WIDTH / HEIGHT, 0.1, 20000);
+      this.camera.position.set(0, 50, 100);
+      this.scene.add( this.camera );
 
-  // Floor
-  var floorGeometry = new THREE.PlaneGeometry(1000, 1000, 20, 20);
-  var floorMaterial = new THREE.MeshPhongMaterial({
-    color: 0xecebec,
-    specular: 0x000000,
-    shininess: 100
-  });
+      var that = this;
 
-  var floor = new THREE.Mesh(floorGeometry, floorMaterial);
-  floor.rotation.x = -0.5 * Math.PI;
-  floor.receiveShadow = true;
-  this.scene.add(floor);
+      //update renderer size, aspect ratio and projection matrix on resize
+      window.addEventListener('resize', function () {
+          var WIDTH = window.innerWidth,
+              HEIGHT = window.innerHeight;
 
-  // Lights
-  // Ambient light for general illumination
-  var ambientLight = new THREE.AmbientLight(0x252525);
-  this.scene.add(ambientLight);
+          that.renderer.setSize(WIDTH, HEIGHT);
 
-  //Add interation capability to the scene
-  this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+          that.camera.aspect = WIDTH / HEIGHT;
+          that.camera.updateProjectionMatrix();
+      });
 
-  this.indexArray = 0;
-};
+      //background color of the scene
+      this.renderer.setClearColor(0x000000, 1);
 
-//create the bars required to show the visualization
-SphereVisualizer.prototype.createSpheres = function () {
-  var y = 10;
-
-  for( var i = 0; i < this.numberOfSpheres; i++ ){
-      var geometry = new THREE.SphereGeometry( this.sphereRadio, 100, 100 );
-      //var material = new THREE.MeshNormalMaterial({ wireframe: true });
-      var material = new THREE.MeshPhongMaterial({
-        // Required For Shadows
+      // Floor
+      var floorGeometry = new THREE.PlaneGeometry(1000, 1000, 20, 20);
+      var floorMaterial = new THREE.MeshPhongMaterial({
         color: 0xecebec,
         specular: 0x000000,
         shininess: 100
       });
 
-      this.spheres[i] = new THREE.Mesh( geometry, material );
+      var floor = new THREE.Mesh(floorGeometry, floorMaterial);
+      floor.rotation.x = -0.5 * Math.PI;
+      floor.receiveShadow = true;
+      this.scene.add(floor);
 
-      this.spheres[i].position.set( Math.cos(2 * Math.PI/this.numberOfSpheres * i) * this.radio, y, Math.sin(2 * Math.PI/this.numberOfSpheres * i) * this.radio );
+      // Lights
+      // Ambient light for general illumination
+      var ambientLight = new THREE.AmbientLight(0x252525);
+      this.scene.add(ambientLight);
 
-      this.vertices[i] = JSON.parse(JSON.stringify( this.spheres[i].geometry.vertices ));
-      this.scene.add( this.spheres[i] );
+      //Add interation capability to the scene
+      this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
 
-      //create a light and add it to the scene
-      // color, intensity, distance, angle, penumbra, decay
-      var light = new THREE.PointLight(0xffffff, 0.8, 25, 0.4, 1, 10);
-      //light.position.set( 0, 20, 0 );
-      light.position.set( Math.cos(2 * Math.PI/this.numberOfSpheres * i) * this.radio, y+10, Math.sin(2 * Math.PI/this.numberOfSpheres * i) * this.radio );
-      this.scene.add(light);
-  }
-};
+      this.indexArray = 0;
+    }
 
-SphereVisualizer.prototype.setupAudioProcessing = function () {
-    //get the audio context
-    this.audioContext = new AudioContext();
+    //create the spheres required to show the visualization
+    createSpheres () {
+      var y = 10;
 
-    //create the javascript node
-    this.javascriptNode = this.audioContext.createScriptProcessor(2048, 1, 1);
-    this.javascriptNode.connect(this.audioContext.destination);
+      for( var i = 0; i < this.numberOfSpheres; i++ ){
+          var geometry = new THREE.SphereGeometry( this.sphereRadio, 100, 100 );
+          //var material = new THREE.MeshNormalMaterial({ wireframe: true });
+          var material = new THREE.MeshPhongMaterial({
+            // Required For Shadows
+            color: 0xecebec,
+            specular: 0x000000,
+            shininess: 100
+          });
 
-    //create the source buffer
-    this.sourceBuffer = this.audioContext.createBufferSource();
+          this.spheres[i] = new THREE.Mesh( geometry, material );
 
-    //create the analyser node
-    this.analyser = this.audioContext.createAnalyser();
-    this.analyser.smoothingTimeConstant = 0.3;
-    this.analyser.fftSize = 512;
+          this.spheres[i].position.set( Math.cos(2 * Math.PI/this.numberOfSpheres * i) * this.radio, y, Math.sin(2 * Math.PI/this.numberOfSpheres * i) * this.radio );
 
-    //connect source to analyser
-    this.sourceBuffer.connect(this.analyser);
+          this.vertices[i] = JSON.parse(JSON.stringify( this.spheres[i].geometry.vertices ));
+          this.scene.add( this.spheres[i] );
 
-    //analyser to speakers
-    this.analyser.connect(this.javascriptNode);
+          //create a light and add it to the scene
+          // color, intensity, distance, angle, penumbra, decay
+          var light = new THREE.PointLight(0xffffff, 0.8, 25, 0.4, 1, 10);
+          //light.position.set( 0, 20, 0 );
+          light.position.set( Math.cos(2 * Math.PI/this.numberOfSpheres * i) * this.radio, y+10, Math.sin(2 * Math.PI/this.numberOfSpheres * i) * this.radio );
+          this.scene.add(light);
+      }
+    }
 
-    //connect source to analyser
-    this.sourceBuffer.connect(this.audioContext.destination);
+    setupAudioProcessing () {
+        //get the audio context
+        this.audioContext = new AudioContext();
 
-    var that = this;
+        //create the javascript node
+        this.javascriptNode = this.audioContext.createScriptProcessor(2048, 1, 1);
+        this.javascriptNode.connect(this.audioContext.destination);
 
-    //this is where we animates the bars
-    this.javascriptNode.onaudioprocess = function () {
+        //create the source buffer
+        this.sourceBuffer = this.audioContext.createBufferSource();
 
-        // get the average for the first channel
-        var array = new Uint8Array(that.analyser.frequencyBinCount);
-        that.analyser.getByteFrequencyData(array);
+        //create the analyser node
+        this.analyser = this.audioContext.createAnalyser();
+        this.analyser.smoothingTimeConstant = 0.3;
+        this.analyser.fftSize = 512;
 
-        //render the scene and update controls
-        visualizer.renderer.render(visualizer.scene, visualizer.camera);
-        visualizer.controls.update();
+        //connect source to analyser
+        this.sourceBuffer.connect(this.analyser);
 
-        var step = Math.round( array.length / visualizer.numberOfSpheres);
+        //analyser to speakers
+        this.analyser.connect(this.javascriptNode);
 
-        visualizer.indexArray = (visualizer.indexArray + 1) % 360;
+        //connect source to analyser
+        this.sourceBuffer.connect(this.audioContext.destination);
 
-        for( var i = 0; i < visualizer.numberOfSpheres; i++ ){
-          var freqRatio = Math.floor( 255/visualizer.numberOfSpheres );
-          var freqsPerSphere = array.slice( i * freqRatio, (i+1)*freqRatio );
-          var freqVertexRatio = Math.floor( visualizer.vertices[i].length / freqRatio );
+        var audioProcess = function () {
+            // get the average for the first channel
+            var array = new Uint8Array( this.analyser.frequencyBinCount );
+            this.analyser.getByteFrequencyData(array);
 
-          visualizer.spheres[i].geometry.dynamic = true;
-          for( var j = 0; j < visualizer.vertices[i].length; j++ ){
-            visualizer.spheres[i].geometry.vertices[j].x = visualizer.vertices[i][j].x * (freqsPerSphere[ Math.floor(j/freqVertexRatio) ]/(255 - visualizer.reaction) + 1);
-            visualizer.spheres[i].geometry.vertices[j].y = visualizer.vertices[i][j].y * (freqsPerSphere[ Math.floor(j/freqVertexRatio) ]/(255 - visualizer.reaction) + 1);
-            visualizer.spheres[i].geometry.vertices[j].z = visualizer.vertices[i][j].z * (freqsPerSphere[ Math.floor(j/freqVertexRatio) ]/(255 - visualizer.reaction) + 1);
-          }
-          visualizer.spheres[i].geometry.verticesNeedUpdate = true;
-          visualizer.spheres[i].material.color.setHSL( visualizer.indexArray/360, 1, 0.5 );
+            //render the scene and update controls
+            this.renderer.render( this.scene, this.camera );
+            this.controls.update();
+
+            var step = Math.round( array.length / this.numberOfSpheres);
+
+            this.indexArray = (this.indexArray + 1) % 360;
+
+            for( var i = 0; i < this.numberOfSpheres; i++ ){
+              var freqRatio = Math.floor( 255/this.numberOfSpheres );
+              var freqsPerSphere = array.slice( i * freqRatio, (i+1)*freqRatio );
+              var freqVertexRatio = Math.floor( this.vertices[i].length / freqRatio );
+
+              this.spheres[i].geometry.dynamic = true;
+              for( var j = 0; j < this.vertices[i].length; j++ ){
+                this.spheres[i].geometry.vertices[j].x = this.vertices[i][j].x * (freqsPerSphere[ Math.floor(j/freqVertexRatio) ]/(255 - this.reaction) + 1);
+                this.spheres[i].geometry.vertices[j].y = this.vertices[i][j].y * (freqsPerSphere[ Math.floor(j/freqVertexRatio) ]/(255 - this.reaction) + 1);
+                this.spheres[i].geometry.vertices[j].z = this.vertices[i][j].z * (freqsPerSphere[ Math.floor(j/freqVertexRatio) ]/(255 - this.reaction) + 1);
+              }
+              this.spheres[i].geometry.verticesNeedUpdate = true;
+              this.spheres[i].material.color.setHSL( this.indexArray/360, 1, 0.5 );
+            }
+        }.bind(this);
+
+        //this is where we animates the spheres
+        this.javascriptNode.onaudioprocess = audioProcess;
+    }
+
+    //start the audio processing
+    start (buffer) {
+        this.audioContext.decodeAudioData(buffer, decodeAudioDataSuccess, decodeAudioDataFailed);
+        var that = this;
+
+        function decodeAudioDataSuccess(decodedBuffer) {
+            that.sourceBuffer.buffer = decodedBuffer
+            that.sourceBuffer.start(0);
+        }
+
+        function decodeAudioDataFailed() {
+            debugger
         }
     }
-};
 
-//start the audio processing
-SphereVisualizer.prototype.start = function (buffer) {
-    this.audioContext.decodeAudioData(buffer, decodeAudioDataSuccess, decodeAudioDataFailed);
-    var that = this;
+    handleDrop () {
+        // does nothing
+        var empty = function () {}.bind(this);
 
-    function decodeAudioDataSuccess(decodedBuffer) {
-        that.sourceBuffer.buffer = decodedBuffer
-        that.sourceBuffer.start(0);
+        // receives dragover events
+        var toDragOver = function (e) {
+          e.stopPropagation();
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'copy';
+        }.bind(this);
+
+        // receives drop files events
+        var toDrop = function (e) {
+          e.stopPropagation();
+
+          e.preventDefault();
+
+          //get the file
+          var file = e.dataTransfer.files[0];
+          var fileName = file.name;
+
+          $("#guide").text("Playing " + fileName);
+
+          var fileReader = new FileReader();
+          var that = this;
+
+          fileReader.onload = function (e) {
+              var fileResult = e.target.result;
+              that.start(fileResult);
+          };
+
+          fileReader.onerror = function (e) {
+            debugger
+          };
+
+          fileReader.readAsArrayBuffer(file);
+        }.bind(this);
+
+        // event listeners
+        document.body.addEventListener("dragenter", empty, false);
+        document.body.addEventListener("dragover", toDragOver, false);
+        document.body.addEventListener("dragleave", empty, false);
+        document.body.addEventListener("drop", toDrop, false);
     }
-
-    function decodeAudioDataFailed() {
-        debugger
-    }
 };
-
-//util method to get random colors to make stuff interesting
-SphereVisualizer.prototype.getRandomColor = function () {
-    var letters = '0123456789ABCDEF'.split('');
-    var color = '#';
-    for (var i = 0; i < 6; i++) {
-        color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
-};
-
-SphereVisualizer.prototype.handleDrop = function () {
-    //drag Enter
-    document.body.addEventListener("dragenter", function () {
-
-    }, false);
-
-    //drag over
-    document.body.addEventListener("dragover", function (e) {
-        e.stopPropagation();
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'copy';
-    }, false);
-
-    //drag leave
-    document.body.addEventListener("dragleave", function () {
-
-    }, false);
-
-    //drop
-    document.body.addEventListener("drop", function (e) {
-        e.stopPropagation();
-
-        e.preventDefault();
-
-        //get the file
-        var file = e.dataTransfer.files[0];
-        var fileName = file.name;
-
-        $("#guide").text("Playing " + fileName);
-
-        var fileReader = new FileReader();
-
-        fileReader.onload = function (e) {
-            var fileResult = e.target.result;
-            visualizer.start(fileResult);
-        };
-
-        fileReader.onerror = function (e) {
-          debugger
-        };
-
-        fileReader.readAsArrayBuffer(file);
-    }, false);
-}
