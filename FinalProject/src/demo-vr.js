@@ -20,8 +20,8 @@
 /* eslint-env es6 */
 
 class DemoVR extends SphereVisualizer {
-  constructor () {
-    super();
+  constructor ( file ) {
+    super( file );
 
     this._onResize = this._onResize.bind(this);
 
@@ -207,8 +207,8 @@ class DemoVR extends SphereVisualizer {
     this._renderer.render(this._scene, this._camera);
   }
 }
-new DemoVR();
-/*var giveClick = function (e) {
+//new DemoVR();
+var giveClick = function (e) {
   document.getElementById("song").click();
 }
 
@@ -235,4 +235,4 @@ document.getElementById("song").addEventListener('change', e => {
   };
 
   fileReader.readAsArrayBuffer(file);
-});*/
+});

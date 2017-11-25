@@ -36,7 +36,7 @@ class SphereVisualizer {
     };
   }
 
-  constructor () {
+  constructor ( file ) {
     // constants
     this.numberOfSpheres = 8;
     this.radio = 7;
@@ -77,7 +77,9 @@ class SphereVisualizer {
 
     this._addEventListeners();
     this.setupAudioProcessing();
-    this.handleDrop();
+    if( file != null )
+      this.start(file);
+    else this.handleDrop();
 
     requestAnimationFrame(this._update);
   }
@@ -88,7 +90,7 @@ class SphereVisualizer {
       var freqsPerSphere, quantity;
       for( var i = 0; i < this.numberOfSpheres; i++ ){
         freqsPerSphere = this.freqs.slice( i * this.freqRatio, (i+1)*this.freqRatio );
-        for( var j = 0; j < this.vertices[i].length; j+=3 ){
+        for( var j = 0; j < this.vertices[i].length; j++ ){
           quantity = (freqsPerSphere[ Math.floor(j/this.freqVertexRatio) ]/this.reactionRatio) + 1;
           this.spheres[i].geometry.vertices[j].x = this.vertices[i][j].x * quantity;
           this.spheres[i].geometry.vertices[j].y = this.vertices[i][j].y * quantity;
@@ -154,7 +156,6 @@ class SphereVisualizer {
     //create a light and add it to the scene
     // color, intensity, distance, angle, penumbra, decay
     var light = new THREE.PointLight(0xffffff, 0.8, 25, 0.4, 1, 10);
-    //light.position.set( 0, 20, 0 );
     light.position.set( 0,0,0 );
     this._scene.add(light);
 
@@ -186,7 +187,7 @@ class SphereVisualizer {
     });
     const room = new THREE.Mesh(roomGeometry, roomMaterial);
 
-    room.position.z = -5;
+    //room.position.z = -5;
 
     //this._scene.add(this._box);
     this._scene.add(room);
