@@ -22,6 +22,7 @@
 class DemoVR extends SphereVisualizer {
   constructor () {
     super();
+
     this._onResize = this._onResize.bind(this);
 
     this._disabled = false;
@@ -109,17 +110,11 @@ class DemoVR extends SphereVisualizer {
       return;
     }
 
-    var that = this;
     this._vr.display.requestPresent([{
       source: this._renderer.domElement
-    }]).then(
-      () => {
-        //that._render();
-      },
-      error => {
-        console.error(`Unable to init VR: ${e}`);
-      }
-    );
+    }]).catch(e => {
+      console.error(`Unable to init VR: ${e}`);
+    });
   }
 
   _toggleVR () {
@@ -212,5 +207,32 @@ class DemoVR extends SphereVisualizer {
     this._renderer.render(this._scene, this._camera);
   }
 }
-
 new DemoVR();
+/*var giveClick = function (e) {
+  document.getElementById("song").click();
+}
+
+document.body.addEventListener("click", giveClick, false);
+
+var that = this;
+document.getElementById("song").addEventListener('change', e => {
+  e.stopPropagation();
+  e.preventDefault();
+
+  document.body.removeEventListener("click", giveClick, false);
+
+  //get the file
+  var file = e.target.files[0];
+  var fileReader = new FileReader();
+
+  fileReader.onload = function (e) {
+      var fileResult = e.target.result;
+      new DemoVR( fileResult );
+  };
+
+  fileReader.onerror = function (e) {
+    debugger
+  };
+
+  fileReader.readAsArrayBuffer(file);
+});*/
