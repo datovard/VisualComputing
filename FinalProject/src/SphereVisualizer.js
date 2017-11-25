@@ -72,7 +72,8 @@ class SphereVisualizer {
 
     // 1-time calculations
     this.freqRatio = Math.floor( 255/this.numberOfSpheres );
-    this.freqVertexRatio = Math.floor( this.vertices[0].length / this.freqRatio );
+    this.verticesLength = this.vertices[0].length;
+    this.freqVertexRatio = Math.floor( this.verticesLength / this.freqRatio );
     this.reactionRatio = 255 - this.reaction;
 
     this._addEventListeners();
@@ -90,11 +91,19 @@ class SphereVisualizer {
       var freqsPerSphere, quantity;
       for( var i = 0; i < this.numberOfSpheres; i++ ){
         freqsPerSphere = this.freqs.slice( i * this.freqRatio, (i+1)*this.freqRatio );
-        for( var j = 0; j < this.vertices[i].length; j++ ){
+        for( var j = 0; j < this.vertices[i].length-3; j+= 3  ){
           quantity = (freqsPerSphere[ Math.floor(j/this.freqVertexRatio) ]/this.reactionRatio) + 1;
           this.spheres[i].geometry.vertices[j].x = this.vertices[i][j].x * quantity;
           this.spheres[i].geometry.vertices[j].y = this.vertices[i][j].y * quantity;
           this.spheres[i].geometry.vertices[j].z = this.vertices[i][j].z * quantity;
+
+          this.spheres[i].geometry.vertices[j+1].x = this.vertices[i][j+1].x * quantity;
+          this.spheres[i].geometry.vertices[j+1].y = this.vertices[i][j+1].y * quantity;
+          this.spheres[i].geometry.vertices[j+1].z = this.vertices[i][j+1].z * quantity;
+
+          this.spheres[i].geometry.vertices[j+2].x = this.vertices[i][j+2].x * quantity;
+          this.spheres[i].geometry.vertices[j+2].y = this.vertices[i][j+2].y * quantity;
+          this.spheres[i].geometry.vertices[j+2].z = this.vertices[i][j+2].z * quantity;
         }
         this.spheres[i].geometry.verticesNeedUpdate = true;
         this.spheres[i].material.color.setHSL( this.indexArray/360, 1, 0.5 );
