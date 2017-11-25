@@ -1,11 +1,20 @@
 'use strict';
 
-$(document).ready(function () {
+/*$(document).ready(function () {
     var visualizer;
     visualizer = new SphereVisualizer();
-});
+});*/
 
 class SphereVisualizer {
+
+    static get CAMERA_SETTINGS () {
+      return {
+        viewAngle: 45,
+        near: 0.1,
+        far: 20000
+      };
+    }
+
     constructor () {
       //constants
       this.numberOfSpheres = 8;
@@ -14,18 +23,20 @@ class SphereVisualizer {
       this.reaction = 100;        // min 0 - max 254
 
       //Rendering
-      this.scene;
-      this.camera;
-      this.renderer;
-      this.controls;
+      this._width;
+      this._height;
+      this._scene;
+      this._camera;
+      this._renderer;
+      this._container = document.querySelector('#container');
+      //this.controls;
 
       //spheres
       this.spheres = new Array();
       this.vertices = new Array();
 
       //colors
-      this.indexArray;
-
+      this.indexArray = 0;
 
       //audio
       this.javascriptNode;
@@ -33,48 +44,82 @@ class SphereVisualizer {
       this.sourceBuffer;
       this.analyser;
 
-      this.initialize();
-      this.createSpheres();
+      this.createScene();
+      this.createRenderer();
+      this.createCamera();
+      this.fillScene();
+
+      this._onResize = this._onResize.bind(this);
+      this._update = this._update.bind(this);
+      this._onResize();
+      window.addEventListener('resize', this._onResize );
+
       this.setupAudioProcessing();
       this.handleDrop();
     }
 
-    //initialize the visualizer elements
-    initialize () {
-      this.scene = new THREE.Scene();
+    createScene () {
+      this._scene = new THREE.Scene();
 
-      //get the width and height
-      var WIDTH = window.innerWidth,
-          HEIGHT = window.innerHeight;
+      this._width = window.innerWidth;
+      this._height = window.innerHeight;
+    }
 
+    createRenderer () {
       //get the renderer
-      this.renderer = new THREE.WebGLRenderer({ antialias: true });
-      this.renderer.setSize(WIDTH, HEIGHT);
+      this._renderer = new THREE.WebGLRenderer({ antialias: true });
+      this._renderer.setSize( this._width, this._height );
 
       //append the rederer to the body
-      document.body.appendChild( this.renderer.domElement );
-
-      //create and add camera
-      this.camera = new THREE.PerspectiveCamera(40, WIDTH / HEIGHT, 0.1, 20000);
-      this.camera.position.set(0, 50, 100);
-      this.scene.add( this.camera );
-
-      var that = this;
-
-      //update renderer size, aspect ratio and projection matrix on resize
-      window.addEventListener('resize', function () {
-          var WIDTH = window.innerWidth,
-              HEIGHT = window.innerHeight;
-
-          that.renderer.setSize(WIDTH, HEIGHT);
-
-          that.camera.aspect = WIDTH / HEIGHT;
-          that.camera.updateProjectionMatrix();
-      });
+      document.body.appendChild( this._renderer.domElement );
 
       //background color of the scene
-      this.renderer.setClearColor(0x000000, 1);
+      this._renderer.setClearColor(0x000000, 1);
+    }
 
+    createCamera () {
+      this._settings = SphereVisualizer.CAMERA_SETTINGS;
+
+      //create and add camera
+      this._camera = new THREE.PerspectiveCamera(
+        this._settings.viewAngle,
+        this._width / this._height,
+        this._settings.near,
+        this._settings.far
+      );
+
+      this._camera.position.set(0, 10, 0);
+      this._scene.add( this._camera );
+    }
+
+    //create the spheres required to show the visualization
+    createSpheres () {
+      var y = 10;
+
+      // loop to create the spheres and the upper lights
+      for( var i = 0; i < this.numberOfSpheres; i++ ){
+          var geometry = new THREE.SphereGeometry( this.sphereRadio, 100, 100 );
+          var material = new THREE.MeshPhongMaterial({
+            // Required For Shadows
+            color: 0xecebec,
+            specular: 0x000000,
+            shininess: 100
+          });
+          this.spheres[i] = new THREE.Mesh( geometry, material );
+          this.spheres[i].position.set( Math.cos(2 * Math.PI/this.numberOfSpheres * i) * this.radio, y, Math.sin(2 * Math.PI/this.numberOfSpheres * i) * this.radio );
+          this.vertices[i] = JSON.parse(JSON.stringify( this.spheres[i].geometry.vertices ));
+          this._scene.add( this.spheres[i] );
+
+          //create a light and add it to the scene
+          // color, intensity, distance, angle, penumbra, decay
+          var light = new THREE.PointLight(0xffffff, 0.8, 25, 0.4, 1, 10);
+          //light.position.set( 0, 20, 0 );
+          light.position.set( Math.cos(2 * Math.PI/this.numberOfSpheres * i) * this.radio, y+10, Math.sin(2 * Math.PI/this.numberOfSpheres * i) * this.radio );
+          this._scene.add(light);
+      }
+    }
+
+    fillScene () {
       // Floor
       var floorGeometry = new THREE.PlaneGeometry(1000, 1000, 20, 20);
       var floorMaterial = new THREE.MeshPhongMaterial({
@@ -86,47 +131,64 @@ class SphereVisualizer {
       var floor = new THREE.Mesh(floorGeometry, floorMaterial);
       floor.rotation.x = -0.5 * Math.PI;
       floor.receiveShadow = true;
-      this.scene.add(floor);
+      this._scene.add(floor);
 
       // Lights
       // Ambient light for general illumination
       var ambientLight = new THREE.AmbientLight(0x252525);
-      this.scene.add(ambientLight);
+      this._scene.add(ambientLight);
 
-      //Add interation capability to the scene
-      this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
-
-      this.indexArray = 0;
+      this.createSpheres ();
     }
 
-    //create the spheres required to show the visualization
-    createSpheres () {
-      var y = 10;
+    _onResize () {
+      //update renderer size, aspect ratio and projection matrix on resize
+      this._width = window.innerWidth;
+      this._height = window.innerHeight;
+      this._aspect = this._width / this._height;
 
-      for( var i = 0; i < this.numberOfSpheres; i++ ){
-          var geometry = new THREE.SphereGeometry( this.sphereRadio, 100, 100 );
-          //var material = new THREE.MeshNormalMaterial({ wireframe: true });
-          var material = new THREE.MeshPhongMaterial({
-            // Required For Shadows
-            color: 0xecebec,
-            specular: 0x000000,
-            shininess: 100
-          });
+      this._renderer.setSize(this._width, this._height);
 
-          this.spheres[i] = new THREE.Mesh( geometry, material );
-
-          this.spheres[i].position.set( Math.cos(2 * Math.PI/this.numberOfSpheres * i) * this.radio, y, Math.sin(2 * Math.PI/this.numberOfSpheres * i) * this.radio );
-
-          this.vertices[i] = JSON.parse(JSON.stringify( this.spheres[i].geometry.vertices ));
-          this.scene.add( this.spheres[i] );
-
-          //create a light and add it to the scene
-          // color, intensity, distance, angle, penumbra, decay
-          var light = new THREE.PointLight(0xffffff, 0.8, 25, 0.4, 1, 10);
-          //light.position.set( 0, 20, 0 );
-          light.position.set( Math.cos(2 * Math.PI/this.numberOfSpheres * i) * this.radio, y+10, Math.sin(2 * Math.PI/this.numberOfSpheres * i) * this.radio );
-          this.scene.add(light);
+      if (!this._camera) {
+        return;
       }
+
+      this._camera.aspect = this._aspect;
+      this._camera.updateProjectionMatrix();
+    }
+
+    _render () {
+      this._renderer.render(this._scene, this._camera);
+    }
+
+    _update () {
+      for( var i = 0; i < this.numberOfSpheres; i++ ){
+        var freqRatio = Math.floor( 255/this.numberOfSpheres );
+        var freqsPerSphere = this.freqs.slice( i * freqRatio, (i+1)*freqRatio );
+        var freqVertexRatio = Math.floor( this.vertices[i].length / freqRatio );
+
+        this.spheres[i].geometry.dynamic = true;
+        for( var j = 0; j < this.vertices[i].length; j++ ){
+          this.spheres[i].geometry.vertices[j].x = this.vertices[i][j].x * (freqsPerSphere[ Math.floor(j/freqVertexRatio) ]/(255 - this.reaction) + 1);
+          this.spheres[i].geometry.vertices[j].y = this.vertices[i][j].y * (freqsPerSphere[ Math.floor(j/freqVertexRatio) ]/(255 - this.reaction) + 1);
+          this.spheres[i].geometry.vertices[j].z = this.vertices[i][j].z * (freqsPerSphere[ Math.floor(j/freqVertexRatio) ]/(255 - this.reaction) + 1);
+        }
+        this.spheres[i].geometry.verticesNeedUpdate = true;
+        this.spheres[i].material.color.setHSL( this.indexArray/360, 1, 0.5 );
+      }
+
+      //render the scene and update controls
+      this._render();
+    }
+
+    _onAudioProcess () {
+      // get the average for the first channel
+      this.freqs = new Uint8Array( this.analyser.frequencyBinCount );
+      this.analyser.getByteFrequencyData( this.freqs );
+
+      var step = Math.round( this.freqs.length / this.numberOfSpheres);
+      this.indexArray = ( this.indexArray + 1 ) % 360;
+      requestAnimationFrame(this._update);
     }
 
     setupAudioProcessing () {
@@ -153,38 +215,10 @@ class SphereVisualizer {
 
         //connect source to analyser
         this.sourceBuffer.connect(this.audioContext.destination);
-
-        var audioProcess = function () {
-            // get the average for the first channel
-            var array = new Uint8Array( this.analyser.frequencyBinCount );
-            this.analyser.getByteFrequencyData(array);
-
-            //render the scene and update controls
-            this.renderer.render( this.scene, this.camera );
-            this.controls.update();
-
-            var step = Math.round( array.length / this.numberOfSpheres);
-
-            this.indexArray = (this.indexArray + 1) % 360;
-
-            for( var i = 0; i < this.numberOfSpheres; i++ ){
-              var freqRatio = Math.floor( 255/this.numberOfSpheres );
-              var freqsPerSphere = array.slice( i * freqRatio, (i+1)*freqRatio );
-              var freqVertexRatio = Math.floor( this.vertices[i].length / freqRatio );
-
-              this.spheres[i].geometry.dynamic = true;
-              for( var j = 0; j < this.vertices[i].length; j++ ){
-                this.spheres[i].geometry.vertices[j].x = this.vertices[i][j].x * (freqsPerSphere[ Math.floor(j/freqVertexRatio) ]/(255 - this.reaction) + 1);
-                this.spheres[i].geometry.vertices[j].y = this.vertices[i][j].y * (freqsPerSphere[ Math.floor(j/freqVertexRatio) ]/(255 - this.reaction) + 1);
-                this.spheres[i].geometry.vertices[j].z = this.vertices[i][j].z * (freqsPerSphere[ Math.floor(j/freqVertexRatio) ]/(255 - this.reaction) + 1);
-              }
-              this.spheres[i].geometry.verticesNeedUpdate = true;
-              this.spheres[i].material.color.setHSL( this.indexArray/360, 1, 0.5 );
-            }
-        }.bind(this);
+        this._onAudioProcess = this._onAudioProcess.bind(this);
 
         //this is where we animates the spheres
-        this.javascriptNode.onaudioprocess = audioProcess;
+        this.javascriptNode.onaudioprocess = this._onAudioProcess;
     }
 
     //start the audio processing
